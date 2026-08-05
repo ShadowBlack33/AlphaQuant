@@ -11,39 +11,46 @@ from pathlib import Path
 
 SRC = Path("data/samples/prob_summary_sample.csv")
 OUT = Path("reports")
-OUT.mkdir(parents=True, exist_ok=True)
 
 MIN_ACCURACY = float(os.environ.get("BACKTEST_CI_MIN_ACCURACY", "0.60"))
 
-if not SRC.exists():
-    print(f"[ERROR] Missing sample file: {SRC}", file=sys.stderr)
-    sys.exit(2)
 
-total = 0
-hits = 0
-rows = []
+def main() -> int:
+    OUT.mkdir(parents=True, exist_ok=True)
 
-with SRC.open(newline="", encoding="utf-8") as f:
-    r = csv.DictReader(f)
-    for row in r:
-        total += 1
-        hit = 1 if row["pred"].strip().upper() == row["actual"].strip().upper() else 0
-        hits += hit
-        rows.append({**row, "hit": hit})
+    if not SRC.exists():
+        print(f"[ERROR] Missing sample file: {SRC}", file=sys.stderr)
+        return 2
 
-accuracy = hits / total if total else 0.0
+    total = 0
+    hits = 0
+    rows = []
 
-rep_path = OUT / "backtest_ci_report.csv"
-with rep_path.open("w", newline="", encoding="utf-8") as f:
-    w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
-    w.writeheader()
-    for r in rows:
-        w.writerow(r)
+    with SRC.open(newline="", encoding="utf-8") as f:
+        r = csv.DictReader(f)
+        for row in r:
+            total += 1
+            hit = 1 if row["pred"].strip().upper() == row["actual"].strip().upper() else 0
+            hits += hit
+            rows.append({**row, "hit": hit})
 
-print(f"[OK] Samples: {total} | Hits: {hits} | Accuracy: {accuracy:.2%}")
+    accuracy = hits / total if total else 0.0
 
-if accuracy < MIN_ACCURACY:
-    print(f"[FAIL] Accuracy {accuracy:.2%} under threshold ({MIN_ACCURACY:.0%}).", file=sys.stderr)
-    sys.exit(3)
+    rep_path = OUT / "backtest_ci_report.csv"
+    with rep_path.open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        w.writeheader()
+        for r in rows:
+            w.writerow(r)
 
-sys.exit(0)
+    print(f"[OK] Samples: {total} | Hits: {hits} | Accuracy: {accuracy:.2%}")
+
+    if accuracy < MIN_ACCURACY:
+        print(f"[FAIL] Accuracy {accuracy:.2%} under threshold ({MIN_ACCURACY:.0%}).", file=sys.stderr)
+        return 3
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

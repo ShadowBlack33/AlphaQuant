@@ -4,7 +4,7 @@ venv:
 	python -m venv .venv
 
 install: venv
-	. .venv/bin/activate && pip install -e .
+	. .venv/bin/activate && pip install -e ".[dev]"
 
 install-tuning: venv
 	. .venv/bin/activate && pip install -e . && pip install -r requirements-tuning.txt
