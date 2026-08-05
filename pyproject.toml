@@ -26,6 +26,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest", "pytest-cov"]
 tuning = ["optuna", "xgboost"]
+regime = ["hmmlearn"]
 
 [project.scripts]
 alphaquant = "alphaquant.cli.menu:main"
