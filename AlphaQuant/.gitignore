@@ -1,0 +1,42 @@
+# === Entornos virtuales
+.venv/
+env/
+venv/
+*.egg-info/
+
+# === Python cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# === Logs (mantener .gitkeep para estructura)
+logs/*.log
+!logs/.gitkeep
+
+# === Datos intermedios y crudos
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/preds/
+data/*.db
+
+# === Resultados generados
+models/metrics_full.csv
+models/prob_summary.csv
+models/traces/
+models/best_params_*.json
+reports/
+images/
+
+# === Sistema
+.DS_Store
+Thumbs.db
+
+# === Jupyter
+.ipynb_checkpoints/
+
+# === Editor
+.vscode/
+*.code-workspace

@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alphaquant"
+version = "0.2.0"
+description = "ETL -> ML/Statistical models -> Risk analytics for financial time series"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Carlos Andrés Orozco Caicedo" }]
+dependencies = [
+    "pandas",
+    "numpy",
+    "yfinance",
+    "scikit-learn",
+    "statsmodels",
+    "matplotlib",
+    "pyyaml",
+    "colorama",
+    "streamlit",
+    "plotly",
+    "arch",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov"]
+tuning = ["optuna", "xgboost"]
+
+[project.scripts]
+alphaquant = "alphaquant.cli.menu:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,19 @@
+pandas
+numpy
+yfinance
+scikit-learn
+statsmodels
+matplotlib
+pyyaml
+colorama
+streamlit
+plotly
+arch
+
+# Dev / testing
+pytest
+pytest-cov
+
+# Optional: hyperparameter tuning (models/tune.py). Install with:
+#   pip install -r requirements-tuning.txt
+# kept separate because xgboost/optuna are heavy and not needed for the core pipeline.

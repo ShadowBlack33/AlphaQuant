@@ -1,0 +1,42 @@
+name: CI - Tests & Backtest Sanity Check
+
+on:
+  push:
+    branches: [ main, master, alphaquant-v2 ]
+  pull_request:
+    branches: [ main, master, alphaquant-v2 ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install project (editable, with dev deps)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      # FIX (Fase 3): previously only test_smoke.py ran in CI (ci.pytest.ini
+      # restricted python_files to test_smoke.py, and the pandas-dependent
+      # tests -- test_dedupe, test_transform_shapes, test_no_nans_in_key_cols --
+      # were silently never executed). Now the full suite runs.
+      - name: Run full test suite
+        run: python -m pytest -q
+
+      - name: Run CI backtest sanity check (deterministic sample)
+        run: python -m alphaquant.backtest.backtest_ci
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backtest-ci-report
+          path: reports/backtest_ci_report.csv
+          if-no-files-found: error
