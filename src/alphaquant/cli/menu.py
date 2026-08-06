@@ -12,6 +12,8 @@ from alphaquant.etl.transform import transform_frame
 from alphaquant.etl.load import save_csv_idempotent
 from alphaquant.training.train_regression import run_for_folder as run_regression_folder
 from alphaquant.training.train_direction import run_folder as run_classif_folder
+from alphaquant.risk.volatility import run_for_folder as run_garch_folder
+from alphaquant.risk.regime import run_for_folder as run_regime_folder
 
 VALID_INTERVALS = {
     "1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "4h",
@@ -52,6 +54,58 @@ def _all_tickers_from_presets() -> list[str]:
                 seen.add(u)
                 out.append(u)
     return out
+
+
+def run_risk_analytics(
+    data_dir: Path,
+    interval: str,
+    risk_cfg: dict,
+    seed: int,
+    logger: logging.Logger,
+    output_dir: Path = Path("models/risk"),
+) -> None:
+    """GARCH volatility + regime detection over every ticker CSV in
+    data_dir. Kept as a standalone function (rather than inline in
+    run_everything_once) so it can be unit-tested against synthetic data
+    without needing yfinance or the interactive input() prompts.
+
+    Each stage is wrapped independently: a GARCH/regime failure at the
+    batch level (e.g. a missing optional dependency) is logged and
+    printed, but doesn't take down a pipeline run that already produced
+    ETL + training output.
+    """
+    pattern = f"*_{interval}.csv"
+
+    try:
+        garch_summary = run_garch_folder(
+            folder=str(data_dir), pattern=pattern,
+            p_order=int(risk_cfg.get("garch_p", 1)),
+            q_order=int(risk_cfg.get("garch_q", 1)),
+            horizon=int(risk_cfg.get("garch_horizon", 10)),
+            save_summary=True, summary_path=output_dir / "garch_summary.csv",
+            save_series=True, series_dir=output_dir / "vol_series",
+        )
+        if garch_summary is not None:
+            print(f"  OK GARCH: {output_dir / 'garch_summary.csv'}")
+    except Exception as e:
+        logger.exception("GARCH fallo")
+        print(f"  ERROR GARCH: {e}")
+
+    try:
+        regime_summary = run_regime_folder(
+            folder=str(data_dir), pattern=pattern,
+            n_regimes=int(risk_cfg.get("n_regimes", 2)),
+            roll_window=int(risk_cfg.get("roll_window", 21)),
+            method=str(risk_cfg.get("regime_method", "kmeans")),
+            random_state=seed,
+            save_summary=True, summary_path=output_dir / "regime_summary.csv",
+            save_labels=True, labels_dir=output_dir / "regime_labels",
+        )
+        if regime_summary is not None:
+            print(f"  OK Regimenes: {output_dir / 'regime_summary.csv'}")
+    except Exception as e:
+        logger.exception("Deteccion de regimenes fallo")
+        print(f"  ERROR Regimenes: {e}")
 
 
 def run_everything_once(cfg, logger):
@@ -138,6 +192,12 @@ def run_everything_once(cfg, logger):
     )
     if save_csv:
         print("  OK Resumen: models/prob_summary.csv")
+
+    risk_cfg = cfg.get("risk", {}) or {}
+    run_risk = _yesno("Ejecutar analisis de riesgo (GARCH + regimenes)?", default=bool(risk_cfg.get("enabled", True)))
+    if run_risk:
+        print("\n-> Analizando riesgo (GARCH + regimenes)...")
+        run_risk_analytics(data_dir=data_dir, interval=interval, risk_cfg=risk_cfg, seed=seed, logger=logger)
 
 
 def main():

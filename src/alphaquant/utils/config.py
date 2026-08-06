@@ -20,7 +20,17 @@ DEFAULT_CONFIG = {
         "lags": [1, 2, 3, 5],
     },
     "seed": 42,
+    "risk": {
+        "enabled": True,
+        "garch_p": 1,
+        "garch_q": 1,
+        "garch_horizon": 10,
+        "n_regimes": 2,
+        "roll_window": 21,
+        "regime_method": "kmeans",
+    },
 }
+
 
 
 def load_config(path: str = "config/config.yaml") -> dict:
