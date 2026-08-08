@@ -40,11 +40,17 @@ def test_run_risk_analytics_end_to_end(tmp_path):
 
     garch_summary = pd.read_csv(output_dir / "garch_summary.csv")
     regime_summary = pd.read_csv(output_dir / "regime_summary.csv")
+    risk_overall_summary = pd.read_csv(output_dir / "risk_overall_summary.csv")
+    portfolio_summary = pd.read_csv(output_dir / "portfolio_summary.csv")
 
     assert set(garch_summary["ticker"]) == {"AAA", "BBB"}
     assert set(regime_summary["ticker"]) == {"AAA", "BBB"}
+    assert set(risk_overall_summary["ticker"]) == {"AAA", "BBB"}
+    assert portfolio_summary.iloc[0]["n_tickers"] == 2
     assert (output_dir / "vol_series" / "AAA_1d_garch_vol.csv").exists()
     assert (output_dir / "regime_labels" / "AAA_1d_regimes.csv").exists()
+    assert (output_dir / "risk_by_regime" / "AAA_1d_risk_by_regime.csv").exists()
+    assert (output_dir / "rolling_corr.csv").exists()
     # both series ended in the high-vol half of the synthetic data
     assert (regime_summary.set_index("ticker")["current_regime"] == "high_vol").all()
 
@@ -64,4 +70,4 @@ def test_run_risk_analytics_survives_empty_folder(tmp_path):
         seed=42, logger=logger, output_dir=output_dir,
     )
     # nothing to assert beyond "it didn't raise" -- no summary files expected
-    assert not (output_dir / "garch_summary.csv").exists()
+    assert not (output_dir / "garch_summary.csv").exists()  

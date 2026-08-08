@@ -14,6 +14,7 @@ from alphaquant.training.train_regression import run_for_folder as run_regressio
 from alphaquant.training.train_direction import run_folder as run_classif_folder
 from alphaquant.risk.volatility import run_for_folder as run_garch_folder
 from alphaquant.risk.regime import run_for_folder as run_regime_folder
+from alphaquant.risk.portfolio_analytics import run_for_folder as run_portfolio_folder
 
 VALID_INTERVALS = {
     "1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "4h",
@@ -64,15 +65,19 @@ def run_risk_analytics(
     logger: logging.Logger,
     output_dir: Path = Path("models/risk"),
 ) -> None:
-    """GARCH volatility + regime detection over every ticker CSV in
+    """GARCH volatility + regime detection + portfolio risk (VaR/CVaR,
+    rolling correlation, drawdown by regime) over every ticker CSV in
     data_dir. Kept as a standalone function (rather than inline in
     run_everything_once) so it can be unit-tested against synthetic data
     without needing yfinance or the interactive input() prompts.
 
-    Each stage is wrapped independently: a GARCH/regime failure at the
-    batch level (e.g. a missing optional dependency) is logged and
-    printed, but doesn't take down a pipeline run that already produced
-    ETL + training output.
+    Each stage is wrapped independently: a failure at the batch level
+    (e.g. a missing optional dependency) is logged and printed, but
+    doesn't take down a pipeline run that already produced ETL + training
+    output. Note that portfolio_analytics.run_for_folder re-fits GARCH +
+    regimes per ticker internally (via risk.regime.detect_regimes_for_file)
+    rather than reusing the summaries computed above -- some duplicated
+    computation, traded for each module staying independently runnable.
     """
     pattern = f"*_{interval}.csv"
 
@@ -106,6 +111,20 @@ def run_risk_analytics(
     except Exception as e:
         logger.exception("Deteccion de regimenes fallo")
         print(f"  ERROR Regimenes: {e}")
+
+    try:
+        run_portfolio_folder(
+            folder=str(data_dir), pattern=pattern,
+            n_regimes=int(risk_cfg.get("n_regimes", 2)),
+            roll_window=int(risk_cfg.get("roll_window", 21)),
+            method=str(risk_cfg.get("regime_method", "kmeans")),
+            random_state=seed,
+            save_outputs=True, output_dir=output_dir,
+        )
+        print(f"  OK Riesgo de portafolio: {output_dir / 'risk_overall_summary.csv'}")
+    except Exception as e:
+        logger.exception("Analisis de riesgo de portafolio fallo")
+        print(f"  ERROR Riesgo de portafolio: {e}")
 
 
 def run_everything_once(cfg, logger):
