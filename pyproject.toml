@@ -27,6 +27,7 @@ dependencies = [
 dev = ["pytest", "pytest-cov"]
 tuning = ["optuna", "xgboost"]
 regime = ["hmmlearn"]
+api = ["fastapi", "uvicorn[standard]"]
 
 [project.scripts]
 alphaquant = "alphaquant.cli.menu:main"
