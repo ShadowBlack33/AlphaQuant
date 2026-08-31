@@ -40,3 +40,8 @@ Thumbs.db
 # === Editor
 .vscode/
 *.code-workspace
+
+# Frontend (React/Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
