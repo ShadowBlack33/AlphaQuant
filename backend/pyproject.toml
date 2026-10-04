@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alphaquant"
+version = "0.3.0.dev0"
+description = "Regime-aware financial risk analytics: data pipeline, risk models and API"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Carlos Andrés Orozco Caicedo" }]
+dependencies = [
+    "pandas>=2.2",
+    "numpy",
+    "scipy",
+    "scikit-learn",
+    "statsmodels",
+    "arch",
+    "pyyaml",
+    "yfinance",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "httpx", "ruff"]
+api = ["fastapi", "uvicorn[standard]"]
+regime = ["hmmlearn"]
+notebooks = ["jupyterlab", "ipykernel", "matplotlib"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+# Minimal set for now (syntax errors, undefined names). Tightened in later steps.
+select = ["E9", "F63", "F7", "F82"]

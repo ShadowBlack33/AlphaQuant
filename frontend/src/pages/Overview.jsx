@@ -1,34 +1,21 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import StatCard from "../components/StatCard";
-import DataTable from "../components/DataTable";
 import { pct, num } from "../lib/format";
 
 export default function Overview() {
   const [portfolio, setPortfolio] = useState(null);
-  const [signals, setSignals] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([api.portfolioSummary(), api.signals()])
-      .then(([p, s]) => {
-        setPortfolio(p);
-        setSignals(s || []);
-      })
+    api.portfolioSummary()
+      .then((p) => setPortfolio(p))
       .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="loading">Cargando</div>;
 
   const hasPortfolio = portfolio && Object.keys(portfolio).length > 0;
-  const bullish = [...signals].sort((a, b) => b.proba_ens - a.proba_ens).slice(0, 5);
-  const bearish = [...signals].sort((a, b) => a.proba_ens - b.proba_ens).slice(0, 5);
-
-  const signalCols = [
-    { key: "ticker", label: "Ticker" },
-    { key: "proba_ens", label: "Proba subir", numeric: true, format: (v) => pct(v, 1) },
-    { key: "pred", label: "Senal", format: (v) => <span className={`pill ${v === "UP" ? "pill-up" : "pill-down"}`}>{v}</span> },
-  ];
 
   return (
     <div>
@@ -45,17 +32,6 @@ export default function Overview() {
           <StatCard label="Calmar" value={num(portfolio.portfolio_calmar, 2)} tone="good" />
         </div>
       )}
-
-      <div className="two-col">
-        <div>
-          <h3>Senales alcistas</h3>
-          <DataTable rows={bullish} columns={signalCols} emptyLabel="Sin senales aun" />
-        </div>
-        <div>
-          <h3>Senales bajistas</h3>
-          <DataTable rows={bearish} columns={signalCols} emptyLabel="Sin senales aun" />
-        </div>
-      </div>
     </div>
   );
 }

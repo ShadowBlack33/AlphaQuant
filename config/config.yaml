@@ -1,24 +1,35 @@
+# AlphaQuant configuration -- single source of truth for the asset universe.
+# Paths are NOT configured here: they are resolved from the repo root by
+# alphaquant.core.paths.
+
 tickers:
+  # US equity indices (ETFs)
   - SPY
   - QQQ
   - DIA
   - IWM
+  # Mega-cap equities
   - AAPL
   - MSFT
-  - TSLA
   - NVDA
   - AMZN
   - GOOGL
   - META
+  - TSLA
+  # Cross-asset ETFs: gold, long Treasuries, high-yield credit, US dollar, oil
   - GLD
   - TLT
+  - HYG
   - UUP
   - USO
+  # Crypto (trades 7 days a week -- calendar alignment required)
+  - BTC-USD
+  - ETH-USD
+
 start_date: "2015-01-01"
 end_date: null
 interval: "1d"
-data_dir: "data/raw"
-logs_dir: "logs"
+
 features:
   returns: "log"
   sma_windows: [10, 20, 50]
@@ -28,9 +39,10 @@ features:
   bollinger: { window: 20, k: 2.0 }
   atr_window: 14
   lags: [1, 2, 3, 5]
+
 seed: 42
+
 risk:
-  enabled: true
   garch_p: 1
   garch_q: 1
   garch_horizon: 10

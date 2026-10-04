@@ -1,14 +1,17 @@
-name: CI - Tests & Backtest Sanity Check
+name: CI
 
 on:
   push:
-    branches: [ main, master, alphaquant-v2 ]
+    branches: [ main, refactor/v3 ]
   pull_request:
-    branches: [ main, master, alphaquant-v2 ]
+    branches: [ main ]
 
 jobs:
-  test:
+  backend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
       - name: Checkout
@@ -17,26 +20,37 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
 
-      - name: Install project (editable, with dev deps)
+      - name: Install backend (dev + api + regime extras)
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          python -m pip install -e ".[dev,api,regime]"
 
-      # FIX (Fase 3): previously only test_smoke.py ran in CI (ci.pytest.ini
-      # restricted python_files to test_smoke.py, and the pandas-dependent
-      # tests -- test_dedupe, test_transform_shapes, test_no_nans_in_key_cols --
-      # were silently never executed). Now the full suite runs.
-      - name: Run full test suite
-        run: python -m pytest -q
+      - name: Lint
+        run: python -m ruff check src tests
 
-      - name: Run CI backtest sanity check (deterministic sample)
-        run: python -m alphaquant.backtest.backtest_ci
+      - name: Tests
+        run: python -m pytest -q -rs
 
-      - name: Upload report artifact
-        uses: actions/upload-artifact@v4
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          name: backtest-ci-report
-          path: reports/backtest_ci_report.csv
-          if-no-files-found: error
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install and build
+        run: |
+          npm ci
+          npm run build

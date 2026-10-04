@@ -1,49 +1,41 @@
-# === Entornos virtuales
+# ===== Python
 .venv/
-env/
 venv/
-*.egg-info/
-
-# === Python cache
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*.egg-info/
 .pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
 
-# === Logs (mantener .gitkeep para estructura)
-logs/*.log
-!logs/.gitkeep
+# ===== Secrets (API keys never go to git; see .env.example files)
+.env
+.env.*
+!.env.example
 
-# === Datos intermedios y crudos
+# ===== Data: everything local except the folder skeleton
+data/*/
+!data/raw/
+!data/processed/
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
-data/preds/
-data/*.db
 
-# === Resultados generados
-models/metrics_full.csv
-models/prob_summary.csv
-models/traces/
-models/best_params_*.json
-reports/
-images/
+# ===== Generated outputs (models, risk tables, logs, reports)
+artifacts/
 
-# === Sistema
+# ===== Frontend
+frontend/node_modules/
+frontend/dist/
+
+# ===== OS / editors
 .DS_Store
 Thumbs.db
-
-# === Jupyter
-.ipynb_checkpoints/
-
-# === Editor
 .vscode/
 *.code-workspace
 
-# Frontend (React/Vite)
-frontend/node_modules/
-frontend/dist/
-frontend/.env
-
-models/risk/
+# ===== v0.2 output folders (replaced by artifacts/). Safe to delete locally.
+/models/
+/reports/
+/logs/

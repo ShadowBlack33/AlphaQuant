@@ -12,8 +12,6 @@ async function get(path) {
 export const api = {
   health: () => get("/api/health"),
   tickers: () => get("/api/tickers"),
-  signals: () => get("/api/signals"),
-  metricsFull: () => get("/api/metrics-full"),
   garchSummary: () => get("/api/garch-summary"),
   regimeSummary: () => get("/api/regime-summary"),
   riskOverall: () => get("/api/risk-overall"),
