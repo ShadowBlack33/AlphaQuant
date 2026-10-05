@@ -30,7 +30,10 @@ python -m pytest backend\tests
 
 ## Ejecución
 
+Requiere `TIINGO_API_KEY` en un archivo `.env` en la raíz (ver `.env.example`).
+
 ```powershell
+python -m alphaquant.data.pipeline                                 # ETL -> data\processed + informe
 python -m alphaquant.risk.pipeline                                 # riesgo -> artifacts\risk
 python -m uvicorn alphaquant.api.main:app --reload --port 8000     # API
 cd frontend; npm install; npm run dev                              # dashboard

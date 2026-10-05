@@ -192,7 +192,7 @@ def run_for_folder(
     fail (too few observations, bad columns, non-convergence) with a
     warning instead of aborting the whole batch.
     """
-    folder = Path(folder) if folder is not None else paths.raw_dir()
+    folder = Path(folder) if folder is not None else paths.processed_dir()
     summary_path = Path(summary_path) if summary_path is not None else paths.risk_dir() / "regime_summary.csv"
     labels_dir = Path(labels_dir) if labels_dir is not None else paths.risk_dir() / "regime_labels"
     rows = []

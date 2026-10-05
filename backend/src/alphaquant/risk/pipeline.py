@@ -1,7 +1,7 @@
 """Risk analytics pipeline: GARCH + regimes + portfolio risk.
 
 Replaces the risk section of the v0.2 interactive CLI (cli/menu.py).
-Reads every `*_{interval}.csv` in data/raw/ and writes to artifacts/risk/.
+Reads every `*_{interval}.csv` in data/processed/ and writes to artifacts/risk/.
 
 Run: python -m alphaquant.risk.pipeline
 """
@@ -86,7 +86,7 @@ def main() -> int:
     cfg = load_config()
     set_global_seed(int(cfg["seed"]))
     status = run_risk_analytics(
-        data_dir=paths.raw_dir(),
+        data_dir=paths.processed_dir(),
         output_dir=paths.risk_dir(),
         interval=str(cfg.get("interval", "1d")),
         risk_cfg=cfg["risk"],

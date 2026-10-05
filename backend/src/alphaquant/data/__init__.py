@@ -1,5 +1,4 @@
-"""Data layer: extraction, validation and transformation (ETL).
+"""Data layer: providers -> immutable raw store -> validation -> processed.
 
-Pending rewrite (v3 step 1): provider interface (Tiingo, Coinbase, FRED),
-immutable raw layer, Pandera validation and flag-not-clip cleaning.
+Run the whole ETL with:  python -m alphaquant.data.pipeline
 """

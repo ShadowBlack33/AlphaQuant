@@ -6,7 +6,7 @@ series and exposes:
 - in-sample conditional volatility (the model's estimate of vol at each
   historical point)
 - out-of-sample volatility forecasts (h-step-ahead)
-- a folder-level runner (`run_for_folder`) reading `data/raw/*_1d.csv`
+- a folder-level runner (`run_for_folder`) reading `data/processed/*_1d.csv`
   and writing a summary CSV under `artifacts/risk/`
 
 Expects the same `ret` column already computed by
@@ -23,6 +23,7 @@ from arch import arch_model
 from arch.univariate.base import ARCHModelResult
 
 from alphaquant.core import paths
+from alphaquant.data.calendars import is_crypto
 
 # arch's optimizer is numerically happier with returns of O(1) rather than
 # O(1e-2) (typical daily log returns). We scale up before fitting and scale
@@ -95,11 +96,20 @@ def forecast_volatility(
 
 
 def load_returns(p: Path, ret_col: str = "ret") -> pd.Series:
-    """Load the `ret` column from a `data/raw/*.csv` file, indexed by Datetime."""
-    df = pd.read_csv(p, parse_dates=["Datetime"]).sort_values("Datetime").reset_index(drop=True)
+    """Load the `ret` column from a processed `*_1d.csv` file, indexed by date.
+
+    Accepts the v3 processed schema (`date`) and the v0.2 schema (`Datetime`).
+    """
+    df = pd.read_csv(p)
+    date_col = "date" if "date" in df.columns else "Datetime"
+    if date_col not in df.columns:
+        raise ValueError(f"{p.name} no tiene columna de fecha (date/Datetime)")
     if ret_col not in df.columns:
         raise ValueError(f"Columna '{ret_col}' no encontrada en {p.name}")
-    s = df.set_index("Datetime")[ret_col]
+    df[date_col] = pd.to_datetime(df[date_col])
+    df = df.sort_values(date_col).dropna(subset=[ret_col]).reset_index(drop=True)
+    s = df.set_index(date_col)[ret_col]
+    s.index.name = "date"
     s.name = ret_col
     return s
 
@@ -158,15 +168,18 @@ def run_for_folder(
     Skips files that fail (too few observations, missing columns, non-convergence) with
     a warning instead of aborting the whole batch.
     """
-    folder = Path(folder) if folder is not None else paths.raw_dir()
+    folder = Path(folder) if folder is not None else paths.processed_dir()
     summary_path = Path(summary_path) if summary_path is not None else paths.risk_dir() / "garch_summary.csv"
     series_dir = Path(series_dir) if series_dir is not None else paths.risk_dir() / "vol_series"
     rows = []
     for f in sorted(folder.glob(pattern)):
         try:
+            # Crypto trades 365 days a year: annualizing with 252 understates
+            # its volatility by ~17%.
+            ppy = 365 if is_crypto(f.stem.split("_")[0]) else periods_per_year
             summary, cv, _fc = analyze_file(
                 f, p_order=p_order, q_order=q_order, horizon=horizon,
-                ret_col=ret_col, annualize=annualize, periods_per_year=periods_per_year,
+                ret_col=ret_col, annualize=annualize, periods_per_year=ppy,
             )
             rows.append(summary)
             if save_series:

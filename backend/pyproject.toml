@@ -17,7 +17,10 @@ dependencies = [
     "statsmodels",
     "arch",
     "pyyaml",
-    "yfinance",
+    "requests",
+    "python-dotenv",
+    "pandera>=0.24",
+    "exchange_calendars",
 ]
 
 [project.optional-dependencies]

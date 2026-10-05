@@ -21,6 +21,7 @@ import pandas as pd
 from scipy.stats import norm
 
 from alphaquant.core import paths
+from alphaquant.data.calendars import aggregate_crypto_to_equity_sessions
 from alphaquant.risk.volatility import load_returns
 from alphaquant.risk.regime import detect_regimes_for_file
 
@@ -208,7 +209,7 @@ def load_returns_matrix(
     Datetime, one column per ticker (column name = ticker, from filename
     stem before the first underscore). Files that fail to load are skipped
     with a warning."""
-    folder = Path(folder) if folder is not None else paths.raw_dir()
+    folder = Path(folder) if folder is not None else paths.processed_dir()
     series = {}
     for f in sorted(folder.glob(pattern)):
         try:
@@ -295,11 +296,13 @@ def run_for_folder(
     single ticker's GARCH/regime failure is skipped rather than aborting
     the batch (same convention as risk.volatility/risk.regime).
     """
-    folder = Path(folder) if folder is not None else paths.raw_dir()
+    folder = Path(folder) if folder is not None else paths.processed_dir()
     output_dir = Path(output_dir) if output_dir is not None else paths.risk_dir()
     results: dict = {}
 
-    returns_matrix = load_returns_matrix(folder, pattern=pattern, ret_col=ret_col)
+    returns_matrix = aggregate_crypto_to_equity_sessions(
+        load_returns_matrix(folder, pattern=pattern, ret_col=ret_col)
+    )
     # Tickers with too little history are excluded from the portfolio level:
     # aligning to a common calendar would otherwise shrink EVERY ticker to
     # the shortest history (v0.2 computed portfolio VaR on 5 days when one

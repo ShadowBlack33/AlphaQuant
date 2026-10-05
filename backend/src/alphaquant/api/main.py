@@ -1,7 +1,7 @@
 """Read-only FastAPI backend for the AlphaQuant dashboard.
 
 Every endpoint reads a file already produced by the pipelines
-(data/raw/ and artifacts/risk/) and returns it as JSON. No computation
+(data/processed/ and artifacts/risk/) and returns it as JSON. No computation
 happens here: the pipelines stay the single source of truth.
 
 Paths are resolved at request time through alphaquant.core.paths, so the
@@ -63,10 +63,10 @@ def health() -> dict:
 
 @app.get("/api/tickers")
 def tickers() -> list[str]:
-    raw = paths.raw_dir()
-    if not raw.exists():
+    processed = paths.processed_dir()
+    if not processed.exists():
         return []
-    return sorted({f.stem.split("_")[0] for f in raw.glob("*_1d.csv")})
+    return sorted({f.stem.split("_")[0] for f in processed.glob("*_1d.csv")})
 
 
 @app.get("/api/garch-summary")

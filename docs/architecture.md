@@ -7,7 +7,7 @@ alphaquant/
 ├── backend/            Paquete Python `alphaquant` (pyproject propio)
 │   ├── src/alphaquant/
 │   │   ├── core/       Rutas, configuración, logging, semillas
-│   │   ├── data/       ETL (se reconstruye en el paso 1)
+│   │   ├── data/       ETL: proveedores, capa raw, validación, procesado, informe
 │   │   ├── features/   Indicadores técnicos
 │   │   ├── risk/       GARCH, regímenes, VaR/CVaR de portafolio, pipeline
 │   │   ├── evaluation/ Backtests y validación
@@ -16,7 +16,7 @@ alphaquant/
 │   └── tests/
 ├── frontend/           React + Vite
 ├── config/config.yaml  Única fuente de verdad del universo de activos
-├── data/               raw/ y processed/ (locales, no versionados)
+├── data/               raw/ (inmutable) y processed/ (locales, no versionados)
 ├── artifacts/          Salidas generadas: riesgo, modelos, logs (no versionado)
 ├── docs/               Arquitectura y decisiones
 └── .github/workflows/  CI: lint + tests del backend, build del frontend
@@ -52,10 +52,55 @@ calendario común el valor es ~0.19. Los tickers con menos de 252
 observaciones se excluyen del nivel de portafolio en vez de recortar la
 historia de todos.
 
+## Capa de datos (ETL)
+
+```
+proveedor (Tiingo / Coinbase)
+   │  fetch: historia completa en cada corrida
+   ▼
+data/raw/<proveedor>/<TICKER>/<fecha>.json.gz + .meta.json   ← inmutable, con sha256
+   │  normalize: esquema canónico común
+   ▼
+validación
+   1. contrato (Pandera): tipos, nulos, precios > 0, fechas únicas y ordenadas → FAIL
+   2. calendario: fechas faltantes vs NYSE (o todos los días en cripto)  → WARN / FAIL
+   3. flags por fila: OHLC, volumen 0, precio congelado, outlier, salto sin
+      evento corporativo, ajuste sin evento                              → WARN
+   │
+   ▼
+data/processed/<TICKER>_1d.csv   ret = log retorno total (adj_close), flags incluidos
+artifacts/data_quality/latest.md informe por corrida (PASS / WARN / FAIL)
+```
+
+**Fuentes.** Tiingo para acciones y ETFs: precios crudos y ajustados,
+dividendos y splits. Coinbase para BTC y ETH: velas diarias públicas en USD
+real. El plan gratuito de Tiingo es de uso interno, así que el dashboard
+público muestra métricas derivadas y no precios.
+
+**Marcar, no recortar.** v0.2 recortaba retornos y precios a los cuantiles
+0.1 %/99.9 % de toda la muestra: borraba los días extremos (SPY -11.6 % se
+guardaba como -6.2 %, BTC -46 % como -18 %) y filtraba información del
+futuro. Ahora los días sospechosos se marcan y se conservan. El outlier se
+mide con mediana y MAD de los 252 días ANTERIORES, sin mirar el futuro.
+
+**Retorno total.** `ret` sale de `adj_close`, que incluye dividendos. v0.2
+usaba el cierre sin ajustar y perdía ~5 pp/año en HYG.
+
+**Historia completa en cada corrida.** Los precios ajustados se recalculan
+hacia atrás con cada dividendo nuevo; agregar solo los días nuevos mezclaría
+bases de ajuste distintas. Son 16 peticiones a Tiingo y ~30 a Coinbase.
+
+**Un ticker que falla no se publica** y conserva su último archivo bueno.
+
+**Cripto y acciones en el mismo portafolio.** Los retornos de cripto se
+llevan al calendario de NYSE sumando los log-retornos del fin de semana en
+el lunes, en vez de descartarlos. Limitación: el cierre diario de cripto es
+00:00 UTC, unas 4 horas después del cierre de NYSE. La volatilidad anual de
+cripto se anualiza con 365 días, no con 252.
+
 ## Pendiente (orden de trabajo)
 
-1. ETL: proveedores (Tiingo, Coinbase, FRED), capa raw inmutable, validación
-   con Pandera, marcar en vez de recortar, retornos totales.
+1. Notebook 01 de auditoría de datos (v0.2 vs v3) y datos macro de FRED.
 2. Baselines y evaluación walk-forward purgada con embargo.
 3. Backbone multiactivo y fine-tuning.
 4. Backtest de VaR (Kupiec, Christoffersen).

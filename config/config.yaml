@@ -26,6 +26,11 @@ tickers:
   - BTC-USD
   - ETH-USD
 
+# Data sources (see docs/architecture.md). Crypto = tickers ending in -USD.
+data:
+  equity_provider: tiingo     # needs TIINGO_API_KEY in .env (repo root)
+  crypto_provider: coinbase   # public endpoint, no key
+
 start_date: "2015-01-01"
 end_date: null
 interval: "1d"

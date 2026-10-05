@@ -24,13 +24,13 @@ def _two_regime_returns(n_low=150, n_high=150, low_sigma=0.004, high_sigma=0.03,
 
 @pytest.fixture
 def pipeline_workspace(tmp_path, monkeypatch):
-    """Builds a real (not mocked) data/raw + artifacts/risk tree using the
+    """Builds a real (not mocked) data/processed + artifacts/risk tree using the
     actual pipeline functions, and points ALPHAQUANT_ROOT at it -- so the
     API is exercised against genuine output shapes.
     """
     monkeypatch.setenv("ALPHAQUANT_ROOT", str(tmp_path))
 
-    data_dir = tmp_path / "data" / "raw"
+    data_dir = tmp_path / "data" / "processed"
     data_dir.mkdir(parents=True)
     for ticker, seed in [("AAA", 1), ("BBB", 2)]:
         r = _two_regime_returns(seed=seed)

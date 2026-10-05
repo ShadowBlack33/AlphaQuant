@@ -33,11 +33,11 @@ def test_missing_config_is_an_error(tmp_path, monkeypatch):
 
 
 def test_config_matches_tickers_on_disk():
-    """Single source of truth: the configured universe must match the raw
-    files present (skipped when data/raw has not been downloaded yet)."""
+    """Single source of truth: the configured universe must match the
+    processed files (skipped until the ETL has run)."""
     cfg = load_config()
-    raw = paths.raw_dir()
-    on_disk = {f.stem.split("_")[0] for f in raw.glob("*_1d.csv")} if raw.exists() else set()
+    processed = paths.processed_dir()
+    on_disk = {f.stem.split("_")[0] for f in processed.glob("*_1d.csv")} if processed.exists() else set()
     if not on_disk:
-        pytest.skip("data/raw vacio: corre el ETL primero")
+        pytest.skip("data/processed vacio: corre el ETL primero")
     assert set(cfg["tickers"]) == on_disk
