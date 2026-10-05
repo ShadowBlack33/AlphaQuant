@@ -14,6 +14,7 @@ servida por una API FastAPI y un dashboard en React.
 |---|---|
 | `backend/` | Paquete Python `alphaquant`: datos, riesgo, evaluación, API |
 | `frontend/` | Dashboard React + Vite |
+| `notebooks/` | Análisis paso a paso (auditoría de datos, modelos) |
 | `config/` | `config.yaml`, universo de activos y parámetros |
 | `data/` | Datos locales (no versionados) |
 | `artifacts/` | Salidas generadas (no versionadas) |

@@ -27,7 +27,7 @@ dependencies = [
 dev = ["pytest", "pytest-cov", "httpx", "ruff"]
 api = ["fastapi", "uvicorn[standard]"]
 regime = ["hmmlearn"]
-notebooks = ["jupyterlab", "ipykernel", "matplotlib"]
+notebooks = ["ipykernel", "matplotlib"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

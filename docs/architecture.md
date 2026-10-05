@@ -15,6 +15,7 @@ alphaquant/
 │   │   └── api/        FastAPI de solo lectura
 │   └── tests/
 ├── frontend/           React + Vite
+├── notebooks/          Análisis revisables paso a paso (01_data_audit, ...)
 ├── config/config.yaml  Única fuente de verdad del universo de activos
 ├── data/               raw/ (inmutable) y processed/ (locales, no versionados)
 ├── artifacts/          Salidas generadas: riesgo, modelos, logs (no versionado)
@@ -100,7 +101,7 @@ cripto se anualiza con 365 días, no con 252.
 
 ## Pendiente (orden de trabajo)
 
-1. Notebook 01 de auditoría de datos (v0.2 vs v3) y datos macro de FRED.
+1. Datos macro de FRED y contraste de días marcados con una segunda fuente.
 2. Baselines y evaluación walk-forward purgada con embargo.
 3. Backbone multiactivo y fine-tuning.
 4. Backtest de VaR (Kupiec, Christoffersen).
